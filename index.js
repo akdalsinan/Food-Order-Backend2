@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const http = require("http");
+const { Server } = require("socket.io");
 const db = require("./config/database.js");
 
 const Auth = require("./routes/auth.js");
@@ -32,11 +34,61 @@ app.use("/", UserCreditCart);
 app.use("/", FeedBack);
 
 db();
-app.listen(PORT, () => {
-  console.log("SERVER IS RUNNING ON PORT 5000");
+
+// HTTP server ve Socket.IO sunucusunu oluştur
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
 });
 
-//veri tabanına kayıt yapabilmek için models adında klasör açtık
-// rotaları belirleyebilmek için routes klasörü açtık
-//  rotalar uzamasın diye controllers klasörü
-// auth işlemleri için middleware klasörü
+let rooms = [];
+let messages = {}; // Her oda için mesajları saklamak için bir obje
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // Kullanıcı odaya katıldığında
+  socket.on("joinRoom", (room) => {
+    socket.join(room);
+    if (!rooms.includes(room)) {
+      rooms.push(room);
+    }
+    if (!messages[room]) {
+      messages[room] = [];
+    }
+    console.log(`User joined room: ${room}`);
+    io.emit("updateRooms", rooms); // Tüm kullanıcılara güncellenmiş oda listesini gönder
+
+    // Odaya katılan kullanıcıya mevcut mesajları gönder
+    socket.emit("loadMessages", messages[room]);
+  });
+
+  // Mesaj gönderildiğinde
+  socket.on("sendMessage", (data) => {
+    console.log(`Message received: ${data.message} in room: ${data.room}`);
+    if (!messages[data.room]) {
+      messages[data.room] = [];
+    }
+    messages[data.room].push({
+      message: data.message,
+      sender: data.sender,
+    });
+    io.to(data.room).emit("receiveMessage", {
+      message: data.message,
+      sender: data.sender,
+      room: data.room, // Oda bilgisini ekleyelim
+    });
+    // Tüm istemcilere yeni mesaj olduğuna dair bildirim gönder
+    io.emit("newMessage", { room: data.room });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`SERVER IS RUNNING ON PORT ${PORT}`);
+});
