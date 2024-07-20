@@ -3,16 +3,64 @@ const Food = require("../models/food.js");
 //yemek ekleme
 const addFood = async (req, res) => {
   try {
-    // const { urunId, urunName, foodName, foodPrice, foodDesc } = req.body;
+    const { urunId, urunName, foodName, foodPrice, foodDesc } = req.body;
 
-    const newFood = await Food.create(req.body);
+    console.log("req.body", req.body);
+    // const newFood = await Food.create(req.body);
+    const foodImage = req.file.filename;
 
+    console.log("foodImage", foodImage);
+
+    const newFood = await Food.create({
+      urunId,
+      urunName,
+      foodName,
+      foodPrice,
+      foodDesc,
+      foodImage,
+    });
     res.status(201).json({
       isSuccess: true,
       newFood,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+
+//yemek güncelleme
+const updateFood = async (req, res) => {
+  try {
+    const foodId = req.body.foodId;
+    const status = req.body;
+
+    if (req.file) {
+      status.foodImage = req.file.filename;
+    }
+
+    const updatedFood = await Food.findByIdAndUpdate(foodId, status, {
+      new: true,
+    });
+    console.log("updatedFood", updatedFood);
+
+    if (!updatedFood) {
+      return res.status(404).json({
+        isSuccess: false,
+        resultMessage: "Yemek Bilgisi Bulunamadı.",
+      });
+    }
+
+    res.status(200).json({
+      isSuccess: true,
+      data: updatedFood,
+      resultMessage: "Yemek Güncellendi.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      isSuccess: false,
+      resultMessage: "Sunucu Hatası",
+      error: error.message,
+    });
   }
 };
 
@@ -60,36 +108,6 @@ const getAllMakarna = async (req, res) => {
       isSuccess: false,
       resultMessage: [error.message],
       resultSet: [],
-    });
-  }
-};
-
-//yemek güncelleme
-const updateFood = async (req, res) => {
-  try {
-    const foodId = req.body.foodId;
-    const status = req.body;
-
-    const updatedFood = await Food.findByIdAndUpdate(foodId, status, {
-      new: true,
-    });
-    if (!updatedFood) {
-      return res.status(404).json({
-        isSuccess: false,
-        resultMessage: "Yemek Bilgisi Bulunamadı.",
-      });
-    }
-
-    res.status(200).json({
-      isSuccess: true,
-      data: updatedFood,
-      resultMessage: "Yemek Güncellendi.",
-    });
-  } catch (error) {
-    res.status(500).json({
-      isSuccess: false,
-      resultMessage: "Sunucu Hatası",
-      error: error.message,
     });
   }
 };

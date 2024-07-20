@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
 const db = require("./config/database.js");
+const path = require("path");
 
 const Auth = require("./routes/auth.js");
 const Food = require("./routes/food.js");
@@ -32,6 +33,9 @@ app.use("/", Product);
 app.use("/", Order);
 app.use("/", UserCreditCart);
 app.use("/", FeedBack);
+
+//fronted'in dosyaları görmesi için middleware
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 db();
 

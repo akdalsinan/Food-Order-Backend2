@@ -28,6 +28,10 @@ const FoodSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  foodImage: {
+    type: String,
+    required: true,
+  },
   date: {
     type: Date,
     default: Date.now,
