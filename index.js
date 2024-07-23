@@ -88,6 +88,24 @@ io.on("connection", (socket) => {
     io.emit("newMessage", { room: data.room });
   });
 
+  // socket.on("image", (data) => {
+  //   console.log(`Message received: ${data.message} in room: ${data.room}`);
+  //   if (!messages[data.room]) {
+  //     messages[data.room] = [];
+  //   }
+  //   messages[data.room].push({
+  //     message: data.message,
+  //     sender: data.sender,
+  //   });
+  //   io.to(data.room).emit("receiveMessage", {
+  //     message: data.message,
+  //     sender: data.sender,
+  //     room: data.room, // Oda bilgisini ekleyelim
+  //   });
+  //   // Tüm istemcilere yeni mesaj olduğuna dair bildirim gönder
+  //   io.emit("newMessage", { room: data.room });
+  // });
+
   socket.on("disconnect", () => {
     console.log("A user disconnected");
   });
